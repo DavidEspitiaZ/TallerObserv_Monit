@@ -21,10 +21,13 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Docker image
-        run: # Convert the GitHub repository owner's username to lowercase for the Docker tag
+        run: |
+          # Convert the GitHub repository owner's username to lowercase for the Docker tag
           REPO_OWNER_LOWERCASE=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          # Convert the GitHub repository name to lowercase for the Docker tag
           REPO_NAME_LOWERCASE=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
-          docker build -t ghcr.io/"$REPO_OWNER_LOWERCASE"/"$REPO_NAME_LOWERCASE"/app:${{ github.sha }} -t ghcr.io/"$REPO_OWNER_LOWERCASE"/"$REPO_NAME_LOWERCASE"/app:latest .
 
+          # Now use these lowercase variables in the docker build command
+          docker build -t ghcr.io/"$REPO_OWNER_LOWERCASE"/"$REPO_NAME_LOWERCASE"/app:${{ github.sha }} -t ghcr.io/"$REPO_OWNER_LOWERCASE"/"$REPO_NAME_LOWERCASE"/app:latest .
       - name: Push Docker image
         run: docker push ghcr.io/${{ github.repository }}/app --all-tags
