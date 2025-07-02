@@ -19,6 +19,6 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd /path/to/your/project # Change this to the actual path on your EC2 instance
+            cd /flask-monitoring/app
             git pull
             docker compose up -d prometheus grafana
