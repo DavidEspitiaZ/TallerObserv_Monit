@@ -9,6 +9,9 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    permissions: # Add this block
+      contents: read
+      packages: write # Grant write permission for packages
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
