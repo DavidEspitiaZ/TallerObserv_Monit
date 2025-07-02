@@ -20,5 +20,4 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd /flask-monitoring/app
-            git pull
             docker compose up -d prometheus grafana
