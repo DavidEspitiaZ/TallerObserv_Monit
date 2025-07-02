@@ -1,37 +1,36 @@
-name: Build and Push Docker Image
+
+name: Deploy to EC2 via SCP + SSH
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
 
 jobs:
-  build-and-push:
+  deploy:
     runs-on: ubuntu-latest
-    permissions: # Add this block
-      contents: read
-      packages: write # Grant write permission for packages
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Copy project files to EC2
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        source: "./"
+        target: "~/flask-monitoring"
 
-      - name: Build and Push Docker image
-        run: |
-          # Convert the GitHub repository owner's username to lowercase for the Docker tag
-          REPO_OWNER_LOWERCASE=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          # Convert the GitHub repository name to lowercase for the Docker tag
-          REPO_NAME_LOWERCASE=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
-
-          # Build the Docker image with lowercase tags
-          docker build -t ghcr.io/"$REPO_OWNER_LOWERCASE"/"$REPO_NAME_LOWERCASE"/app:${{ github.sha }} -t ghcr.io/"$REPO_OWNER_LOWERCASE"/"$REPO_NAME_LOWERCASE"/app:latest .
-
-          # Push the Docker image using the same lowercase tags
-          docker push ghcr.io/"$REPO_OWNER_LOWERCASE"/"$REPO_NAME_LOWERCASE"/app --all-tags
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          cd ~/flask-monitoring
+          docker compose down
+          docker compose build --no-cache
+          docker compose up -d
